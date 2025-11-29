@@ -1,31 +1,38 @@
-const nodemailer = require('nodemailer');
+const isTest = process.env.NODE_ENV === "test";
 
-let transporter;
+let sendEmail = async () => {};
 
-(async () => {
-  const testAccount = await nodemailer.createTestAccount();
+if (!isTest) {
+  const nodemailer = require('nodemailer');
 
-  transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    auth: {
-      user: testAccount.user,
-      pass: testAccount.pass
-    }
-  });
+  let transporter;
 
-  console.log("Ethereal email ready. Emails will show preview URLs in console.");
-})();
+  (async () => {
+    const testAccount = await nodemailer.createTestAccount();
 
-module.exports.sendEmail = async (to, subject, message) => {
-  if (!transporter) return;
+    transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass
+      }
+    });
 
-  const info = await transporter.sendMail({
-    from: "no-reply@events.com",
-    to,
-    subject,
-    text: message
-  });
+    console.log("Ethereal email ready. Emails will show preview URLs in console.");
+  })();
 
-  console.log("Email sent:", nodemailer.getTestMessageUrl(info));
-};
+  sendEmail = async (to, subject, message) => {
+    if (!transporter) return;
+
+    const info = await transporter.sendMail({
+      from: "no-reply@events.com",
+      to,
+      subject,
+      text: message
+    });
+
+    console.log("Email sent:", nodemailer.getTestMessageUrl(info));
+  };
+}
+module.exports.sendEmail = sendEmail;

@@ -43,15 +43,22 @@ router.put('/:id', auth, async (req, res) => {
 
 // DELETE event
 router.delete('/:id', auth, async (req, res) => {
-  const event = await Event.findById(req.params.id);
-  if (!event)
-    return res.status(404).json({ message: "Event not found" });
+  try {
+    const event = await Event.findById(req.params.id);
 
-  if (event.organizerId.toString() !== req.user.id)
-    return res.status(403).json({ message: "Not authorized" });
+    if (!event)
+      return res.status(404).json({ message: "Event not found" });
 
-  await event.remove();
-  res.json({ message: "Event deleted" });
+    if (event.organizerId.toString() !== req.user.id)
+      return res.status(403).json({ message: "Not your event" });
+
+    await Event.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Event deleted" });
+  } catch (err) {
+    console.error("DELETE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 // REGISTER for event
